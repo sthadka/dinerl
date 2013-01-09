@@ -67,7 +67,7 @@ create_table(Name, Key, ReadsPerSecond, WritesPerSecond, Timeout) ->
                                         {<<"WritesPerSecond">>, WritesPerSecond}]}], Timeout).
 
 delete_table(Name) ->
-    describe_table(Name, undefined).
+    delete_table(Name, undefined).
 delete_table(Name, Timeout) ->
     api(delete_table, [{<<"TableName">>, Name}], Timeout).
 
