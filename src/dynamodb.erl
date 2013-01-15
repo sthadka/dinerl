@@ -66,7 +66,8 @@ call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout, 
 
 -spec submit(endpoint(), headers(), any(), integer(), options()) -> result().
 submit(Endpoint, Headers, Body, Timeout, Options) ->
-    %io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
+    %%error_logger:info_msg("Request:~nHeaders:~p~nBody:~n~p~n~n",
+    %%                      [Headers, iolist_to_binary(Body)]),
     case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Options) of
         {ok, {{200, _}, _Headers, Response}} ->
             %io:format("Response: ~p~n", [Response]),

@@ -13,6 +13,7 @@
 -export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
+-export([q/3]).
 
 -export([update_data/4]).
 
@@ -200,8 +201,16 @@ update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
 
 scan() ->
     pass.
-q() ->
-    pass.
+
+
+q(T, K, Options) ->
+    q(T, K, Options, undefined).
+
+q(T, K, Options, TimeOut) ->
+    q(T, K, Options, [], TimeOut).
+
+q(T, K, [], Acc, Timeout) ->
+    api(q, [{<<"TableName">>, T} | K], Timeout).
 
 
 
