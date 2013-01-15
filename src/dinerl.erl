@@ -121,7 +121,7 @@ put_item(T, A, [{return, all_old}|Rest], Acc, Timeout) ->
 put_item(T, A, [{return, none}|Rest], Acc, Timeout) ->
     put_item(T, A, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 put_item(T, A, [{expected, V}|Rest], Acc, Timeout) ->
-    put_item(T, A, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout).
+    put_item(T, A, Rest, [{<<"Expected">>, attr_updates(V)}|Acc], Timeout).
 
 
 
@@ -139,7 +139,7 @@ delete_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
 delete_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
     delete_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    delete_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout).
+    delete_item(T, K, Rest, [{<<"Expected">>, attr_updates(V)}|Acc], Timeout).
 
 
 
@@ -183,11 +183,11 @@ update_item(Table, Key, Options, Timeout) ->
     update_item(Table, Key, Options, [], Timeout).
 
 update_item(T, K, [], Acc, Timeout) ->
-    api(update_item, [{<<"TableName">>, T}, {<<"Key">>, K}|Acc], Timeout);
+    api(update_item, {[{<<"TableName">>, T}, {<<"Key">>, K} | Acc]}, Timeout);
 update_item(T, K, [{update, AttributeUpdates}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates, [])}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates)}|Acc], Timeout);
 update_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"Expected">>, attr_updates(V)}|Acc], Timeout);
 update_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 update_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
@@ -202,8 +202,8 @@ update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
 
 
 
-scan() ->
-    pass.
+%% scan() ->
+%%     pass.
 
 
 q(T, K, Options) ->
@@ -212,8 +212,9 @@ q(T, K, Options) ->
 q(T, K, Options, TimeOut) ->
     q(T, K, Options, [], TimeOut).
 
-q(T, K, [], Acc, Timeout) ->
-    api(q, [{<<"TableName">>, T} | K], Timeout).
+q(T, K, [], _Acc, Timeout) ->
+    error_logger:info_msg("K: ~p~n", [K]),
+    api(q, {[{<<"TableName">>, T} | K]}, Timeout).
 
 
 
@@ -276,16 +277,10 @@ update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
     {ok, NewArgs}.
 
 
-expected([], Acc) ->
-    Acc;
-expected([{Option, Value}|Rest], Acc) ->
-    expected(Rest, [value_and_action({Option, Value})|Acc]).
-
-
-attr_updates([], Acc) ->
-    Acc;
-attr_updates([{AttrName, Opts}|Rest], Acc) ->
-    attr_updates(Rest, [{AttrName, expected(Opts, [])}|Acc]).
+attr_updates({Attributes}) ->
+    {lists:map(fun ({Name, {Opts}}) ->
+                       {Name, {lists:map(fun value_and_action/1, Opts)}}
+               end, Attributes)}.
 
 
 

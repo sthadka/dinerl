@@ -112,5 +112,5 @@ get_put() ->
 
     ?assertEqual({ok, {[{<<"ReadsUsed">>, 1},
                         {<<"Item">>, Item}]}},
-                 dinerl:get_item(?HASH_TABLE, Key, [{consistent, true}])).
+                 dinerl:get_item(?HASH_TABLE, Key, [])).
 
