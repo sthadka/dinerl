@@ -62,10 +62,11 @@ create_table(Name, Key, ReadsPerSecond, WritesPerSecond) ->
 -spec create_table(string()|binary(), keyschema(), integer(), integer(), integer()) -> jsonf().
 create_table(Name, Key, ReadsPerSecond, WritesPerSecond, Timeout) ->
     api(create_table,
-        [{<<"TableName">>, Name},
-         {<<"KeySchema">>, Key},
-         {<<"ProvisionedThroughput">>, [{<<"ReadsPerSecond">>, ReadsPerSecond},
-                                        {<<"WritesPerSecond">>, WritesPerSecond}]}], Timeout).
+        {[{<<"TableName">>, Name},
+          {<<"KeySchema">>, Key},
+          {<<"ProvisionedThroughput">>,
+           {[{<<"ReadsPerSecond">>, ReadsPerSecond},
+             {<<"WritesPerSecond">>, WritesPerSecond}]}}]}, Timeout).
 
 delete_table(Name) ->
     describe_table(Name, undefined).
@@ -76,16 +77,18 @@ delete_table(Name, Timeout) ->
 describe_table(Name) ->
     describe_table(Name, undefined).
 describe_table(Name, Timeout) ->
-    api(describe_table, [{<<"TableName">>, Name}], Timeout).
+    api(describe_table, {[{<<"TableName">>, Name}]}, Timeout).
 
 
 
 update_table(Name, ReadsPerSecond, WritesPerSecond) ->
     update_table(Name, ReadsPerSecond, WritesPerSecond, undefined).
 update_table(Name, ReadsPerSecond, WritesPerSecond, Timeout) ->
-    api(update_table, [{<<"TableName">>, Name},
-                       {<<"ProvisionedThroughput">>, [{<<"ReadsPerSecond">>, ReadsPerSecond},
-                                                      {<<"WritesPerSecond">>, WritesPerSecond}]}],
+    api(update_table,
+        {[{<<"TableName">>, Name},
+          {<<"ProvisionedThroughput">>,
+           {[{<<"ReadsPerSecond">>, ReadsPerSecond},
+             {<<"WritesPerSecond">>, WritesPerSecond}]}}]},
         Timeout).
 
 
@@ -97,10 +100,8 @@ list_tables(List) ->
 list_tables(List, Timeout) ->
     list_tables(List, [], Timeout).
 
-list_tables([], [], Timeout) ->
-    list_tables([], {}, Timeout);
 list_tables([], Body, Timeout) ->
-    api(list_tables, Body, Timeout);
+    api(list_tables, {Body}, Timeout);
 list_tables([{start_name, Name}|Rest], Acc, Timeout) ->
     list_tables(Rest, [{<<"ExclusiveStartTableName">>, Name}|Acc], Timeout);
 list_tables([{limit, N}|Rest], Acc, Timeout) ->
@@ -113,7 +114,8 @@ put_item(Table, Attributes, Options, Timeout) ->
     put_item(Table, Attributes, Options, [], Timeout).
 
 put_item(Table, Attributes, [], PartialBody, Timeout) ->
-    api(put_item, [{<<"TableName">>, Table}, {<<"Item">>, Attributes}|PartialBody], Timeout);
+    api(put_item, {[{<<"TableName">>, Table},
+                    {<<"Item">>, Attributes} | PartialBody]}, Timeout);
 put_item(T, A, [{return, all_old}|Rest], Acc, Timeout) ->
     put_item(T, A, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
 put_item(T, A, [{return, none}|Rest], Acc, Timeout) ->
@@ -130,7 +132,8 @@ delete_item(Table, Key, Options, Timeout) ->
     delete_item(Table, Key, Options, [], Timeout).
 
 delete_item(Table, Key, [], PartialBody, Timeout) ->
-    api(delete_item, [{<<"TableName">>, Table}, {<<"Key">>, Key}|PartialBody], Timeout);
+    api(delete_item, {[{<<"TableName">>, Table},
+                       {<<"Key">>, Key} | PartialBody]}, Timeout);
 delete_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
     delete_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
 delete_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
@@ -147,7 +150,7 @@ get_item(Table, Key, Options, Timeout) ->
     get_item(Table, Key, Options, [], Timeout).
 
 get_item(T, K, [], Acc, Timeout) ->
-    api(get_item, [{<<"TableName">>, T}, {<<"Key">>, K}|Acc], Timeout);
+    api(get_item, {[{<<"TableName">>, T}, {<<"Key">>, K}|Acc]}, Timeout);
 get_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
     get_item(T, K, Rest, [{<<"ConsistentRead">>, V}|Acc], Timeout);
 get_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->

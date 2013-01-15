@@ -56,10 +56,11 @@ api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
 -spec api(access_key_id(), secret_access_key(), zone(),
           token(), rfcdate(), method(), any(), integer(), options()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout, Options) ->
+    %%error_logger:info_msg("json: ~p~n", [Body]),
     case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
-                       Token, RFCDate, dmochijson2:encode(Body), Timeout, Options) of
+                       Token, RFCDate, jiffy:encode(Body), Timeout, Options) of
         {ok, Response} ->
-            {ok, dmochijson2:decode(Response)};
+            {ok, jiffy:decode(Response)};
         {error, Code, Reason} ->
             {error, Code, Reason}
     end.

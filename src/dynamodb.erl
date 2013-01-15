@@ -70,7 +70,7 @@ submit(Endpoint, Headers, Body, Timeout, Options) ->
     %%                      [Headers, iolist_to_binary(Body)]),
     case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Options) of
         {ok, {{200, _}, _Headers, Response}} ->
-            %io:format("Response: ~p~n", [Response]),
+            %%error_logger:info_msg("Response: ~p~n", [Response]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
             {error, Code, ErrorString};
