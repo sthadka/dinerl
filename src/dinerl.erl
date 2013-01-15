@@ -248,22 +248,29 @@ update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
     NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
     SecondsToExpire = CurrentExpirationSeconds - NowSeconds,
 
-    case SecondsToExpire < 120 of
-        true ->
-            NewToken = iam:get_session_token(AccessKeyId, SecretAccessKey),
+    NewArgs = case SecondsToExpire < 120 of
+                  true ->
+                      case iam:get_session_token(AccessKeyId, SecretAccessKey) of
+                          {error, Reason} ->
+                              {error, Reason};
+                          NewToken ->
+                              ExpirationString = proplists:get_value(
+                                                   expiration, NewToken),
+                              ApiAccessKeyId = proplists:get_value(
+                                                 access_key_id, NewToken),
+                              ApiSecretAccessKey = proplists:get_value(
+                                                     secret_access_key, NewToken),
+                              ApiToken = proplists:get_value(token, NewToken),
+                              ExpirationSeconds = calendar:datetime_to_gregorian_seconds(
+                                                    iso8601:parse(ExpirationString)),
 
-            ExpirationString = proplists:get_value(expiration, NewToken),
-            ApiAccessKeyId = proplists:get_value(access_key_id, NewToken),
-            ApiSecretAccessKey = proplists:get_value(secret_access_key, NewToken),
-            ApiToken = proplists:get_value(token, NewToken),
-            ExpirationSeconds = calendar:datetime_to_gregorian_seconds(iso8601:parse(ExpirationString)),
-
-            NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, Options, ApiToken, NewDate, ExpirationSeconds};
-
-        false ->
-            NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
+                              {ApiAccessKeyId, ApiSecretAccessKey, Zone,
+                               Options, ApiToken, NewDate, ExpirationSeconds}
+                      end;
+                  false ->
+                      {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
                        Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds}
-    end,
+              end,
 
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
     {ok, NewArgs}.
