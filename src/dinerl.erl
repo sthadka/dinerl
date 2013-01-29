@@ -9,8 +9,10 @@
 
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
--export([list_tables/0, list_tables/1, list_tables/2, put_item/3, put_item/4]).
--export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
+-export([list_tables/0, list_tables/1, list_tables/2]).
+-export([put_item/2, put_item/3, put_item/4]).
+-export([delete_item/2, delete_item/3, delete_item/4]).
+-export([get_item/2, get_item/3, get_item/4]).
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
 -export([q/3]).
@@ -107,7 +109,8 @@ list_tables([{start_name, Name}|Rest], Acc, Timeout) ->
 list_tables([{limit, N}|Rest], Acc, Timeout) ->
     list_tables(Rest, [{<<"Limit">>, N}|Acc], Timeout).
 
-
+put_item(Table, Attributes) ->
+    put_item(Table, Attributes, []).
 put_item(Table, Attributes, Options) ->
     put_item(Table, Attributes, Options, undefined).
 put_item(Table, Attributes, Options, Timeout) ->
@@ -125,7 +128,8 @@ put_item(T, A, [{expected, V}|Rest], Acc, Timeout) ->
 
 
 
-
+delete_item(Table, Key) ->
+    delete_item(Table, Key, []).
 delete_item(Table, Key, Options) ->
     delete_item(Table, Key, Options, undefined).
 delete_item(Table, Key, Options, Timeout) ->
@@ -143,7 +147,8 @@ delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
 
 
 
-
+get_item(Table, Key) ->
+    get_item(Table, Key, []).
 get_item(Table, Key, Options) ->
     get_item(Table, Key, Options, undefined).
 get_item(Table, Key, Options, Timeout) ->
