@@ -16,6 +16,7 @@
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
 -export([q/3]).
+-export([scan/1]).
 
 -export([update_data/4]).
 
@@ -207,8 +208,11 @@ update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
 
 
 
-%% scan() ->
-%%     pass.
+scan(Args) ->
+    scan(Args, undefined).
+
+scan(Args, Timeout) ->
+    api(scan, Args, Timeout).
 
 
 q(T, K, Options) ->
