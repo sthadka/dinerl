@@ -33,8 +33,8 @@
 -define(HASHKEYSCHEMA(N, T), {<<"HashKeyElement">>, [{<<"AttributeName">>, N}, {<<"AttributeType">>, T}]}).
 -define(RANGEKEYSCHEMA(N, T), {<<"RangeKeyElement">>, [{<<"AttributeName">>, N}, {<<"AttributeType">>, T}]}).
 
--define(HASHKEY(N, V), {<<"HashKeyElement">>, [V]}).
--define(RANGEKEY(N, V), {<<"RangeKeyElement">>, [V]}).
+-define(HASHKEY(N, V), {<<"HashKeyElement">>, {[{N, V}]}}).
+-define(RANGEKEY(N, V), {<<"RangeKeyElement">>, {[{N, V}]}}).
 
 
 -define(NONE, <<"NONE">>).
