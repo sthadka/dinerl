@@ -16,7 +16,7 @@
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
 -export([q/3]).
--export([scan/1]).
+-export([scan/1, scan/2]).
 
 -export([update_data/4]).
 
@@ -222,7 +222,6 @@ q(T, K, Options, TimeOut) ->
     q(T, K, Options, [], TimeOut).
 
 q(T, K, [], _Acc, Timeout) ->
-    error_logger:info_msg("K: ~p~n", [K]),
     api(q, {[{<<"TableName">>, T} | K]}, Timeout).
 
 
