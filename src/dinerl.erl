@@ -15,7 +15,7 @@
 -export([get_item/2, get_item/3, get_item/4]).
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
--export([q/3]).
+-export([q/3, q/4]).
 -export([scan/1, scan/2]).
 
 -export([update_data/4]).
