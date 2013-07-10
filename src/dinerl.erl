@@ -175,10 +175,10 @@ get_items(MultiTableQuery, Timeout) ->
     do_get_items(MultiTableQuery, [], Timeout).
 
 do_get_items([], Acc, Timeout) ->
-    api(batch_get_item, [{<<"RequestItems">>, Acc}], Timeout);
+    api(batch_get_item, {[{<<"RequestItems">>, {Acc}}]}, Timeout);
 do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout) ->
     Attrs = proplists:get_value(attrs, Options, []),
-    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]}|Acc], Timeout).
+    do_get_items(Rest, [{Table, {[{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]}}|Acc], Timeout).
 
 
 
