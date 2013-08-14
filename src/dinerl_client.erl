@@ -42,7 +42,7 @@ method_name(delete_table) ->
 method_name(q) ->
     "DynamoDB_20120810.Query";
 method_name(scan) ->
-    "DynamoDBv20110924.Scan".
+    "DynamoDB_20120810.Scan".
 
 
 -spec api(access_key_id(), secret_access_key(), zone(),
