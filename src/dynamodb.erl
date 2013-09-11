@@ -12,7 +12,8 @@ endpoint("us-west-1" ++ _R) -> "dynamodb.us-west-1.amazonaws.com";
 endpoint("us-west-2" ++ _R) -> "dynamodb.us-west-2.amazonaws.com";
 endpoint("ap-northeast-1" ++ _R) -> "dynamodb.ap-northeast-1.amazonaws.com";
 endpoint("ap-southeast-1" ++ _R) -> "dynamodb.ap-southeast-1.amazonaws.com";
-endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com".
+endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com";
+endpoint(CustomEndpoint) -> CustomEndpoint.
 
 
 
