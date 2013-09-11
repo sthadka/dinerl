@@ -26,7 +26,7 @@ method_name(update_item) ->
 %% Table related operations
 %%
 method_name(create_table) ->
-    "DynamoDBv20110924.CreateTable";
+    "DynamoDB_20120810.CreateTable";
 method_name(list_tables) ->
     "DynamoDBv20110924.ListTables";
 method_name(describe_table) ->

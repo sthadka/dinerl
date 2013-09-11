@@ -4,6 +4,13 @@
 -define(HASH_TABLE, <<"dinerl-unit-test-table-hash">>).
 -define(RANGE_TABLE, <<"dinerl-unit-test-table-range">>).
 
+start_app(App) ->
+    case application:start(App) of
+        ok -> ok;
+        {error, {already_started, App}} -> ok;
+        Other -> throw(Other)
+    end.
+
 dinerl_test_() ->
     case file:consult(filename:join([code:priv_dir(dinerl), "aws_credentials.term"])) of
         {ok, Config} ->
@@ -14,10 +21,11 @@ dinerl_test_() ->
                                                               Config),
 
                         inets:start(),
-                        application:start(crypto),
-                        application:start(public_key),
-                        application:start(ssl),
-                        application:start(lhttpc),
+                        start_app(crypto),
+                        start_app(asn1),
+                        start_app(public_key),
+                        start_app(ssl),
+                        start_app(lhttpc),
                         dinerl:setup(AccessKey, SecretAccessKey, "us-east-1a"),
 
                         %% Create tables if necessary
@@ -42,23 +50,25 @@ create_tables() ->
     {ok, {[{<<"TableNames">>, Tables}]}} = dinerl:list_tables(),
 
     Config = [{?HASH_TABLE,
-               {[{<<"HashKeyElement">>, {[{<<"AttributeName">>, <<"key">>},
-                                          {<<"AttributeType">>, <<"S">>}]}}]}},
+               [{[{<<"AttributeName">>, <<"key">>}, {<<"KeyType">>, <<"HASH">>}]}],
+               [{[{<<"AttributeName">>, <<"key">>}, {<<"AttributeType">>, <<"S">>}]}]
+              },
               {?RANGE_TABLE,
-               {[{<<"HashKeyElement">>, {[{<<"AttributeName">>, <<"hash">>},
-                                          {<<"AttributeType">>, <<"S">>}]}},
-                 {<<"RangeKeyElement">>, {[{<<"AttributeName">>, <<"range">>},
-                                           {<<"AttributeType">>, <<"N">>}]}}]}}
+               [{[{<<"AttributeName">>, <<"key">>}, {<<"KeyType">>, <<"HASH">>}]},
+                {[{<<"AttributeName">>, <<"range">>}, {<<"KeyType">>, <<"RANGE">>}]}],
+               [{[{<<"AttributeName">>, <<"key">>}, {<<"AttributeType">>, <<"S">>}]},
+                {[{<<"AttributeName">>, <<"range">>}, {<<"AttributeType">>, <<"N">>}]}]
+              }
               ],
 
     lists:foreach(
-      fun ({Name, Key}) ->
+      fun ({Name, KeySchema, AttrDefs}) ->
               case lists:member(Name, Tables) of
                   true ->
                       wait_for_active(Name),
                       ok;
                   false ->
-                      case dinerl:create_table(Name, Key, 10, 5) of
+                      case dinerl:create_table(Name, KeySchema, AttrDefs, 10, 5) of
                           {ok, _} ->
                               wait_for_active(Name),
                               ok;

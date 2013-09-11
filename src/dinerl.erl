@@ -7,7 +7,7 @@
 
 -export([setup/3, setup/4, api/1, api/2, api/3]).
 
--export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
+-export([create_table/5, create_table/6, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
 -export([list_tables/0, list_tables/1, list_tables/2]).
 -export([put_item/2, put_item/3, put_item/4]).
@@ -58,18 +58,19 @@ api(Name, Body, Timeout) ->
     end.
 
 
--spec create_table(string()|binary(), keyschema(), integer(), integer()) -> jsonf().
-create_table(Name, Key, ReadsPerSecond, WritesPerSecond) ->
-    create_table(Name, Key, ReadsPerSecond, WritesPerSecond, undefined).
+-spec create_table(string()|binary(), keyschema(), term(), integer(), integer()) -> jsonf().
+create_table(Name, KeySchema, AttrDefs, ReadsPerSecond, WritesPerSecond) ->
+    create_table(Name, KeySchema, AttrDefs, ReadsPerSecond, WritesPerSecond, undefined).
 
--spec create_table(string()|binary(), keyschema(), integer(), integer(), integer()) -> jsonf().
-create_table(Name, Key, ReadsPerSecond, WritesPerSecond, Timeout) ->
+-spec create_table(string()|binary(), keyschema(), term(), integer(), integer(), integer()) -> jsonf().
+create_table(Name, Key, AttrDefs, ReadsPerSecond, WritesPerSecond, Timeout) ->
     api(create_table,
         {[{<<"TableName">>, Name},
+          {<<"AttributeDefinitions">>, AttrDefs},
           {<<"KeySchema">>, Key},
           {<<"ProvisionedThroughput">>,
-           {[{<<"ReadsPerSecond">>, ReadsPerSecond},
-             {<<"WritesPerSecond">>, WritesPerSecond}]}}]}, Timeout).
+           {[{<<"ReadCapacityUnits">>, ReadsPerSecond},
+             {<<"WriteCapacityUnits">>, WritesPerSecond}]}}]}, Timeout).
 
 delete_table(Name) ->
     delete_table(Name, undefined).
