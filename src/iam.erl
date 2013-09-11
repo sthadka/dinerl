@@ -13,8 +13,8 @@ get_session_token(AccessKeyId, SecretAccessKey) ->
     case fetch_and_return_url(Url) of
         {ok, Body} ->
             parse_response(Body);
-        E ->
-            {error, E}
+        Error ->
+            Error
     end.
 
 token_url(AccessKeyId, SecretAccessKey, Action) ->
@@ -47,6 +47,6 @@ fetch_and_return_url(Url) ->
     case catch(httpc:request(get, {Url, http_client_headers()}, http_options(), [])) of
         {ok, {{_, 200, _}, _Headers, Body}} ->
             {ok, Body};
-        _E ->
-            error
+        Error ->
+            Error
     end.

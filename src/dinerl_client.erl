@@ -10,15 +10,17 @@
 %%
 -spec method_name(method()) -> string().
 method_name(batch_get_item) ->
-    "DynamoDBv20110924.BatchGetItem";
+    "DynamoDB_20120810.BatchGetItem";
+method_name(batch_write_item) ->
+    "DynamoDB_20120810.BatchWriteItem";
 method_name(get_item) ->
-    "DynamoDBv20110924.GetItem";
+    "DynamoDB_20120810.GetItem";
 method_name(put_item) ->
     "DynamoDBv20110924.PutItem";
 method_name(delete_item) ->
-    "DynamoDBv20110924.DeleteItem";
+    "DynamoDB_20120810.DeleteItem";
 method_name(update_item) ->
-    "DynamoDBv20110924.UpdateItem";
+    "DynamoDB_20120810.UpdateItem";
 
 %%
 %% Table related operations
@@ -38,9 +40,9 @@ method_name(delete_table) ->
 %% query interface
 %%
 method_name(q) ->
-    "DynamoDBv20110924.Query";
+    "DynamoDB_20120810.Query";
 method_name(scan) ->
-    "DynamoDBv20110924.Scan".
+    "DynamoDB_20120810.Scan".
 
 
 -spec api(access_key_id(), secret_access_key(), zone(),
@@ -57,9 +59,10 @@ api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
           token(), rfcdate(), method(), any(), integer(), options()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout, Options) ->
     case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
-                       Token, RFCDate, dmochijson2:encode(Body), Timeout, Options) of
+                       Token, RFCDate, jiffy:encode(Body), Timeout, Options) of
         {ok, Response} ->
-            {ok, dmochijson2:decode(Response)};
+            {ok, jiffy:decode(Response)};
         {error, Code, Reason} ->
+            %%error_logger:info_msg("~p: ~p~n", [Name, Body]),
             {error, Code, Reason}
     end.
