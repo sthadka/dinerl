@@ -16,7 +16,7 @@ method_name(batch_write_item) ->
 method_name(get_item) ->
     "DynamoDB_20120810.GetItem";
 method_name(put_item) ->
-    "DynamoDBv20110924.PutItem";
+    "DynamoDB_20120810.PutItem";
 method_name(delete_item) ->
     "DynamoDB_20120810.DeleteItem";
 method_name(update_item) ->
