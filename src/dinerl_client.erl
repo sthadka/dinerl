@@ -16,7 +16,7 @@ method_name(batch_write_item) ->
 method_name(get_item) ->
     "DynamoDB_20120810.GetItem";
 method_name(put_item) ->
-    "DynamoDBv20110924.PutItem";
+    "DynamoDB_20120810.PutItem";
 method_name(delete_item) ->
     "DynamoDB_20120810.DeleteItem";
 method_name(update_item) ->
@@ -26,7 +26,7 @@ method_name(update_item) ->
 %% Table related operations
 %%
 method_name(create_table) ->
-    "DynamoDBv20110924.CreateTable";
+    "DynamoDB_20120810.CreateTable";
 method_name(list_tables) ->
     "DynamoDBv20110924.ListTables";
 method_name(describe_table) ->
