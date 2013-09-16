@@ -256,7 +256,7 @@ update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
                       case iam:get_session_token(AccessKeyId, SecretAccessKey) of
                           {error, Reason} ->
                               error_logger:warning_msg(
-                                  "dinerl could not refresh IAM credentials: ~p~n", Reason),
+                                  "dinerl could not refresh IAM credentials: ~p~n", [Reason]),
                               {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
                                Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds};
 
