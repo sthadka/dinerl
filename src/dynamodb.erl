@@ -12,7 +12,8 @@ endpoint("us-west-1" ++ _R) -> "dynamodb.us-west-1.amazonaws.com";
 endpoint("us-west-2" ++ _R) -> "dynamodb.us-west-2.amazonaws.com";
 endpoint("ap-northeast-1" ++ _R) -> "dynamodb.ap-northeast-1.amazonaws.com";
 endpoint("ap-southeast-1" ++ _R) -> "dynamodb.ap-southeast-1.amazonaws.com";
-endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com".
+endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com";
+endpoint(CustomEndpoint) -> CustomEndpoint.
 
 
 
@@ -66,10 +67,11 @@ call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout, 
 
 -spec submit(endpoint(), headers(), any(), integer(), options()) -> result().
 submit(Endpoint, Headers, Body, Timeout, Options) ->
-    %io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
+    %%error_logger:info_msg("Request:~nHeaders:~p~nBody:~n~p~n~n",
+    %%                      [Headers, iolist_to_binary(Body)]),
     case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Options) of
         {ok, {{200, _}, _Headers, Response}} ->
-            %io:format("Response: ~p~n", [Response]),
+            %%error_logger:info_msg("Response: ~p~n", [Response]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
             {error, Code, ErrorString};
