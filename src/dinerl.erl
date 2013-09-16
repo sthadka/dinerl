@@ -29,14 +29,7 @@ setup(AccessKeyId, SecretAccessKey, Zone) ->
                    {ok, clientarguments()} | {error, any()}.
 setup(AccessKeyId, SecretAccessKey, Zone, Options) ->
     ets:new(?DINERL_DATA, [named_table, public]),
-    case update_data(AccessKeyId, SecretAccessKey, Zone, Options) of
-        {ok, ClientArgs} ->
-            case timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone, Options]) of
-                {ok, _TRef} -> {ok, ClientArgs};
-                Error -> Error
-            end;
-        Error -> Error
-    end.
+    update_data(AccessKeyId, SecretAccessKey, Zone, Options).
 
 
 -spec api(method()) ->result().
@@ -262,7 +255,11 @@ update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
                   true ->
                       case iam:get_session_token(AccessKeyId, SecretAccessKey) of
                           {error, Reason} ->
-                              {error, Reason};
+                              error_logger:warning_msg(
+                                  "dinerl could not refresh IAM credentials: ~p~n", Reason),
+                              {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
+                               Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds};
+
                           NewToken ->
                               ExpirationString = proplists:get_value(
                                                    expiration, NewToken),
@@ -283,6 +280,7 @@ update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
               end,
 
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
+    timer:apply_after(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone, Options]),
     {ok, NewArgs}.
 
 
