@@ -262,7 +262,11 @@ update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
                   true ->
                       case iam:get_session_token(AccessKeyId, SecretAccessKey) of
                           {error, Reason} ->
-                              {error, Reason};
+                              error_logger:warning_msg(
+                                  "dinerl could not refresh IAM credentials: ~p~n", Reason),
+                              {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
+                               Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds};
+
                           NewToken ->
                               ExpirationString = proplists:get_value(
                                                    expiration, NewToken),
