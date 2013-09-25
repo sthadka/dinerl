@@ -27,8 +27,9 @@ signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Bo
                   "x-amz-target:", Target, $\n,
                   $\n,
                   Body],
-    StringToSign = crypto:sha(SignString),
-    Signature = base64:encode_to_string(crypto:sha_mac(SecretAccessKey, StringToSign)),
+    StringToSign = crypto:hash(sha, SignString),
+    Signature = base64:encode_to_string(
+                  crypto:hmac(sha, SecretAccessKey, StringToSign)),
     {ok,
      {"x-amzn-authorization",
       ["AWS3 AWSAccessKeyId=",
