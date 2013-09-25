@@ -220,70 +220,6 @@ q(T, K, [], _Acc, Timeout) ->
 
 
 
-%% Internal
-%%
-%% Every second it updates the Date part of the arguments
-%% When within 120 seconds of the expiration of the token instead it refreshes also the token
--spec update_data(access_key_id(), secret_access_key(), zone(), options()) ->
-                         {ok, clientarguments()}.
-update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
-    case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
-        {'EXIT', {badarg, _}} ->
-            CurrentApiAccessKeyId = "123",
-            CurrentApiSecretAccessKey = "123",
-            Zone = Zone,
-            Options = Options,
-            CurrentApiToken = "123",
-            CurrentExpirationSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime());
-
-        Result ->
-            {CurrentApiAccessKeyId,
-             CurrentApiSecretAccessKey,
-             Zone,
-             Options,
-             CurrentApiToken,
-             _Date,
-             CurrentExpirationSeconds} = Result
-
-    end,
-
-    NewDate = httpd_util:rfc1123_date(),
-    NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
-    SecondsToExpire = CurrentExpirationSeconds - NowSeconds,
-
-    NewArgs = case SecondsToExpire < 120 of
-                  true ->
-                      case iam:get_session_token(AccessKeyId, SecretAccessKey) of
-                          {error, Reason} ->
-                              error_logger:warning_msg(
-                                  "dinerl could not refresh IAM credentials: ~p~n", [Reason]),
-                              {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
-                               Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds};
-
-                          NewToken ->
-                              ExpirationString = proplists:get_value(
-                                                   expiration, NewToken),
-                              ApiAccessKeyId = proplists:get_value(
-                                                 access_key_id, NewToken),
-                              ApiSecretAccessKey = proplists:get_value(
-                                                     secret_access_key, NewToken),
-                              ApiToken = proplists:get_value(token, NewToken),
-                              ExpirationSeconds = calendar:datetime_to_gregorian_seconds(
-                                                    iso8601:parse(ExpirationString)),
-
-                              {ApiAccessKeyId, ApiSecretAccessKey, Zone,
-                               Options, ApiToken, NewDate, ExpirationSeconds}
-                      end;
-                  false ->
-                      {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
-                       Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds}
-              end,
-
-    ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
-    timer:apply_after(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone, Options]),
-    {ok, NewArgs}.
-
-
 attr_updates({Attributes}) ->
     {lists:map(fun ({Name, {Opts}}) ->
                        {Name, {lists:map(fun value_and_action/1, Opts)}}
@@ -301,3 +237,87 @@ value_and_action({action, delete}) ->
     {<<"Action">>, <<"DELETE">>};
 value_and_action({exists, V}) ->
     {<<"Exists">>, V}.
+
+
+%% Internal
+%%
+%% Every second it updates the Date part of the arguments
+%% When within 120 seconds of the expiration of the token instead it refreshes also the token
+-spec update_data(access_key_id(), secret_access_key(), zone(), options()) ->
+                         {ok, clientarguments()}.
+update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
+    try
+        NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
+        NewDate = httpd_util:rfc1123_date(),
+        CurrentArgs = current_args(Zone, Options, NewDate, NowSeconds),
+        NewArgs = refreshed_args(AccessKeyId, SecretAccessKey, CurrentArgs,
+                                 NewDate, NowSeconds),
+        ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
+        timer:apply_after(1000, ?MODULE, update_data,
+                          [AccessKeyId, SecretAccessKey, Zone, Options]),
+        {ok, NewArgs}
+    catch
+        Class:Rsn ->
+            timer:apply_after(1000, ?MODULE, update_data,
+                              [AccessKeyId, SecretAccessKey, Zone, Options]),
+            error_logger:warning_msg(
+                "dinerl:update_data/4(~p, ~p, ~p, ~p) crashed with: ~p:~p~n",
+                [AccessKeyId, SecretAccessKey, Zone, Options, Class, Rsn]),
+            {error, Class, Rsn}
+    end.
+
+%% @doc The cached 'Args' are a tuple of
+%%      {ApiAccessKeyId,
+%%       ApiSecretAccessKey,
+%%       Zone,
+%%       Options,
+%%       ApiToken,
+%%       Date,
+%%       ExpirationSeconds}
+
+current_args(Zone, Options, NewDate, NowSeconds) ->
+    case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
+        {'EXIT', {badarg, _}} ->
+            %% immediately expiring dummy args
+            {"123", "123", Zone, Options, "123", NewDate, NowSeconds};
+
+        Result -> Result
+    end.
+
+refreshed_args(AccessKeyId, SecretAccessKey, CurrentArgs, NewDate, NowSeconds) ->
+    SecondsToExpire = args_expiration(CurrentArgs) - NowSeconds,
+    case SecondsToExpire < 120 of
+        true ->
+            new_args(AccessKeyId, SecretAccessKey, CurrentArgs, NewDate);
+        false ->
+            set_args_date(CurrentArgs, NewDate)
+    end.
+
+new_args(AccessKeyId, SecretAccessKey,
+         {_, _, Zone, Options, _, _, _} = CurrentArgs, NewDate) ->
+    case iam:get_session_token(AccessKeyId, SecretAccessKey) of
+        {error, Reason} ->
+            error_logger:warning_msg(
+                "dinerl could not refresh IAM credentials: ~p~n", [Reason]),
+            set_args_date(CurrentArgs, NewDate);
+
+        NewToken ->
+            ExpirationString = proplists:get_value(
+                                 expiration, NewToken),
+            ApiAccessKeyId = proplists:get_value(
+                               access_key_id, NewToken),
+            ApiSecretAccessKey = proplists:get_value(
+                                   secret_access_key, NewToken),
+            ApiToken = proplists:get_value(token, NewToken),
+            ExpirationSeconds = calendar:datetime_to_gregorian_seconds(
+                                  iso8601:parse(ExpirationString)),
+
+            {ApiAccessKeyId, ApiSecretAccessKey, Zone,
+             Options, ApiToken, NewDate, ExpirationSeconds}
+    end.
+
+set_args_date({_, _, _, _, _, _Date, _} = Args, NewDate) ->
+    setelement(6, Args, NewDate).
+
+args_expiration({_, _, _, _, _, _, ExpirationSeconds}) ->
+    ExpirationSeconds.
